@@ -1,0 +1,6 @@
+async-lru
+discord.py
+jishaku
+python-dotenv
+supabase
+toml
