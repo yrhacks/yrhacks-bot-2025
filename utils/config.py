@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Generator
 
 import discord
 
 class ConfigNamespace(Mapping[str, Any]):
-    def __init__(self, data: dict):
+    def __init__(self, data: dict) -> None:
         self.__dict__.update(data) # namespace = ConfigNamespace({"foo": "bar"}) -> namespace.foo -> "bar"
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[str, None]:
         yield from self.__dict__.keys() # e.g. list(ConfigNamespace(...)) -> ["key1", "key2"]
 
     def __getitem__(self, key: str) -> Any:
@@ -23,7 +25,7 @@ class ConfigNamespace(Mapping[str, Any]):
             raise AttributeError(name)
 
 class Config(ConfigNamespace):
-    def __init__(self, data: Mapping[str, Any]):
+    def __init__(self, data: Mapping[str, Any]) -> None:
         self.transform_data(data)
         self.bot = ConfigNamespace(data["bot"])
         self.database = ConfigNamespace(data["database"])
