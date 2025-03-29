@@ -4,15 +4,18 @@ import asyncio
 import discord
 import logging
 import logging.handlers
-import toml
+import os
 import pathlib
+import toml
 
 from dotenv import load_dotenv
+from supabase._async.client import create_client
 
-from utils.config import Config
-from utils.bot import Bot
+from utils import Bot, Config, Database
 
-def configure_logging():
+logger = logging.getLogger()
+
+def configure_logging() -> None:
     logging.getLogger('httpx').setLevel(logging.WARNING)
 
     discord.utils.setup_logging(
@@ -26,30 +29,48 @@ def configure_logging():
     dt_fmt = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
     stream_handler.setFormatter(formatter)
-    logging.getLogger().addHandler(stream_handler)
+    logger.addHandler(stream_handler)
 
-def load_config():
+def load_config() -> Config | None:
     data = toml.load(pathlib.Path(__file__).parent / 'data/config.toml')
     config = Config(data)
     checked_properties = {
-        'bot': {'discord_token', 'guild_id', 'log_channel_id', 'unverified_role_id', 'hacker_role_id', 'sync_guild_commands'},
+        'bot': {'guild_id', 'log_channel_id', 'unverified_role_id', 'hacker_role_id', 'sync_guild_commands'},
         'embeds': {'info_color', 'success_color', 'error_color'},
-        'database': {'supabase_url', 'supabase_key'}
     }
 
     for section, required_keys in checked_properties.items():
         for key in required_keys:
             if key not in config[section] or config[section][key] == '' or isinstance(config[section][key], int) and config[section][key] == 123:
-                raise ValueError(f"Missing required key '{key}' in section '{section}' of config.toml")
+                logger.error(f"Missing required key '{key}' in section '{section}' of config.toml")
+                return None
 
     return config
 
 async def main():
-    load_dotenv()
     configure_logging()
     config = load_config()
+    if config is None:
+        logger.error("Failed to load configuration. Exiting.")
+        return
 
-    async with Bot(config) as bot:
-        await bot.start(config.bot.discord_token)
+    load_dotenv()
+    token = os.getenv('DISCORD_TOKEN')
+    if not token:
+        logger.error("DISCORD_TOKEN environment variable not set.")
+        return
+
+    supabase_url = os.getenv('SUPABASE_URL')
+    supabase_key = os.getenv('SUPABASE_KEY')
+    if not supabase_url or not supabase_key:
+        logger.error("SUPABASE_URL or SUPABASE_KEY environment variable not set.")
+        return
+    
+    supabase = await create_client(supabase_url, supabase_key)
+    logger.info("Connected to Supabase")
+    database = Database(supabase)
+
+    async with Bot(config, database) as bot:
+        await bot.start(token)
 
 asyncio.run(main())

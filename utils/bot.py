@@ -7,7 +7,6 @@ import os
 import pathlib
 
 from discord.ext import commands
-from supabase._async.client import create_client
 from utils.config import Config
 from utils.database import Database
 
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger()
 
 class Bot(commands.Bot):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, database: Database) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
@@ -35,14 +34,17 @@ class Bot(commands.Bot):
         )
 
         self.config = config
-        self.initial_extensions = ['jishaku', 'cogs.team', 'cogs.profile', 'cogs.admin']
+        self.database = database
+        self.INITIAL_EXTENSIONS = ['jishaku', 'cogs.team', 'cogs.profile', 'cogs.admin']
 
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "False"
         os.environ["JISHAKU_HIDE"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 
         self.registrant_discord_mapping: dict[str, Registration] = {}
+        self.load_registrant_discord_mapping()
 
+    def load_registrant_discord_mapping(self) -> None:
         with open(pathlib.Path(__file__).parent.parent / 'data/registrations.json', 'r') as file:
             registrations: list[Registration] = json.load(file)
             for registration in registrations:
@@ -50,7 +52,7 @@ class Bot(commands.Bot):
                     self.registrant_discord_mapping[registration['discord_username']] = registration
 
     async def setup_hook(self) -> None:
-        for extension in self.initial_extensions:
+        for extension in self.INITIAL_EXTENSIONS:
             await self.load_extension(extension)
 
         if guild_id := self.config.bot.guild_id:
@@ -59,10 +61,6 @@ class Bot(commands.Bot):
                 await self.tree.sync(guild=guild)
         else:
             logging.warning("No guild id found in config.toml. Commands not synced.")
-
-        self.supabase = supabase = await create_client(self.config.database.supabase_url, self.config.database.supabase_key)
-        logger.info("Connected to Supabase")
-        self.database = Database(supabase)
 
     async def on_ready(self) -> None:
         logger.info(f"Logged in as {self.user} (ID: {self.user and self.user.id})")

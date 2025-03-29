@@ -32,7 +32,6 @@ class Config(ConfigNamespace):
         self.transform_data(data)
         self.bot = ConfigNamespace(data['bot'])
         self.embeds = ConfigNamespace(data['embeds'])
-        self.database = ConfigNamespace(data['database'])
 
     def transform_data(self, data: Mapping[str, Any]) -> None:
         data['embeds']['info_color'] = discord.Color(int(data['embeds']['info_color'], 16))
