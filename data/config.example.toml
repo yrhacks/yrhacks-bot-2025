@@ -4,9 +4,12 @@ guild_id = 123
 log_channel_id = 123
 unverified_role_id = 123
 hacker_role_id = 123
-embed_info_color = "0x7b3cc3"
-embed_success_color = "0x3cc352"
-embed_error_color = "0xc33c3c"
+sync_guild_commands = true
+
+[embeds]
+info_color = "0x7b3cc3"
+success_color = "0x3cc352"
+error_color = "0xc33c3c"
 
 [database]
 supabase_url = ""

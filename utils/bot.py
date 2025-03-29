@@ -53,40 +53,28 @@ class Bot(commands.Bot):
         for extension in self.initial_extensions:
             await self.load_extension(extension)
 
-        SYNC_COMMANDS = False
-        # In overriding setup hook,
-        # we can do things that require a bot prior to starting to process events from the websocket.
-        # In this case, we are using this to ensure that once we are connected, we sync for the testing guild.
-        # You should not do this for every guild or for global sync, those should only be synced when changes happen.
         if guild_id := self.config.bot.guild_id:
-            guild = discord.Object(guild_id)
-            if SYNC_COMMANDS:
+            if self.config.bot.sync_guild_commands:
+                guild = discord.Object(guild_id)
                 await self.tree.sync(guild=guild)
-
-            # We'll copy in the global commands to test with:
-            # followed by syncing to the testing guild.
         else:
             logging.warning("No guild id found in config.toml. Commands not synced.")
-            # # If we don't have a guild id, we can sync globally.
-            # await self.tree.sync()
 
         self.supabase = supabase = await create_client(self.config.database.supabase_url, self.config.database.supabase_key)
         logger.info("Connected to Supabase")
         self.database = Database(supabase)
-        # This would also be a good place to connect to our database and
-        # load anything that should be in memory prior to handling events.
 
     async def on_ready(self) -> None:
         logger.info(f"Logged in as {self.user} (ID: {self.user and self.user.id})")
 
     def error_embed(self, title: str, description: str = '') -> discord.Embed:
-        return discord.Embed(title=title, color=self.config.bot.embed_error_color, description=description)
+        return discord.Embed(title=title, color=self.config.embeds.error_color, description=description)
 
     def success_embed(self, title: str, description: str = '') -> discord.Embed:
-        return discord.Embed(title=title, color=self.config.bot.embed_success_color, description=description)
+        return discord.Embed(title=title, color=self.config.embeds.success_color, description=description)
 
     def info_embed(self, title: str, description: str = '') -> discord.Embed:
-        return discord.Embed(title=title, color=self.config.bot.embed_info_color, description=description)
+        return discord.Embed(title=title, color=self.config.embeds.info_color, description=description)
 
     async def log_message(self, message: str) -> None:
         guild = self.get_guild(self.config.bot.guild_id)

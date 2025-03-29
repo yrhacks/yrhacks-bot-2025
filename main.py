@@ -32,13 +32,14 @@ def load_config():
     data = toml.load(pathlib.Path(__file__).parent / 'data/config.toml')
     config = Config(data)
     checked_properties = {
-        'bot': {'discord_token', 'guild_id', 'embed_info_color', 'embed_success_color', 'embed_error_color', 'log_channel_id'},
+        'bot': {'discord_token', 'guild_id', 'log_channel_id', 'unverified_role_id', 'hacker_role_id', 'sync_guild_commands'},
+        'embeds': {'info_color', 'success_color', 'error_color'},
         'database': {'supabase_url', 'supabase_key'}
     }
 
     for section, required_keys in checked_properties.items():
         for key in required_keys:
-            if key not in config[section] or not config[section][key]:
+            if key not in config[section] or config[section][key] == '' or isinstance(config[section][key], int) and config[section][key] == 123:
                 raise ValueError(f"Missing required key '{key}' in section '{section}' of config.toml")
 
     return config
