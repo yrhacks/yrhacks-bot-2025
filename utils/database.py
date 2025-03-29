@@ -64,7 +64,7 @@ class Database:
         response = await self.supabase.rpc("fetch_teams_with_counts").execute()
         return response.data if response.data else []
 
-    async def fetch_team_by_member(self, team_member_id: int) -> TeamRecord | None:
+    async def fetch_team_by_member_id(self, team_member_id: int) -> TeamRecord | None:
         response = await self.supabase.table('users').select('team_id').eq('discord_id', team_member_id).execute()
         team_id = response.data[0]['team_id']
         if team_id is None:

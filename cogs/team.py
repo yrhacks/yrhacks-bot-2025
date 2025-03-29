@@ -34,7 +34,7 @@ class Team(commands.GroupCog, group_name='team'):
         ]
 
     async def team_member_autocomplete(self, interaction: discord.Interaction, current: str):
-        team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if not team:
             return []
 
@@ -63,7 +63,7 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed("You cannot remove yourself!"))
             return
 
-        team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if not team:
             await interaction.followup.send(embed=self.bot.error_embed("You do not own a team!"))
             return
@@ -88,13 +88,13 @@ class Team(commands.GroupCog, group_name='team'):
             return
 
         # check if user is already in a team
-        existing_team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        existing_team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if existing_team:
             await interaction.followup.send(embed=self.bot.error_embed("You must leave your existing team before accepting a new one!"))
             return
 
         await self.bot.database.accept_team_invite(interaction.user, team)
-        await interaction.followup.send(f"You have accepted the invitation to join the team '{team}'!")
+        await interaction.followup.send(f"You have accepted the invitation to join the team `{team}`!")
 
     @app_commands.command(name='decline')
     @app_commands.autocomplete(team=team_invite_autocomplete)
@@ -107,8 +107,8 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed("Team not found!"))
             return
 
-        await self.bot.database.accept_team_invite(interaction.user, team)
-        await interaction.followup.send(f"You have accepted the invitation to join the team '{team}'!")
+        await self.bot.database.decline_team_invite(interaction.user, team)
+        await interaction.followup.send(f"You have declined the invitation to join the team `{team}`!")
 
     @app_commands.command(name='create')
     async def create(self, interaction: discord.Interaction, name: str):
@@ -127,7 +127,7 @@ class Team(commands.GroupCog, group_name='team'):
 
         await interaction.response.defer(thinking=True)
 
-        existing_team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        existing_team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if existing_team:
             await interaction.followup.send(embed=self.bot.error_embed("You are already in a team!"))
             return
@@ -158,7 +158,7 @@ class Team(commands.GroupCog, group_name='team'):
         await interaction.response.defer(thinking=True)
 
         inviter = interaction.user
-        team_data = await self.bot.database.fetch_team_by_member(inviter.id)
+        team_data = await self.bot.database.fetch_team_by_member_id(inviter.id)
         if team_data is None:
             await interaction.followup.send(embed=self.bot.error_embed("You do not own a team!"))
             return
@@ -171,7 +171,7 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed(f"{member.display_name} is not registered."))
             return
 
-        existing_team = await self.bot.database.fetch_team_by_member(member.id)
+        existing_team = await self.bot.database.fetch_team_by_member_id(member.id)
         if existing_team:
             await interaction.followup.send(embed=self.bot.error_embed(f"{member.display_name} is already in a team!"))
             return
@@ -202,7 +202,7 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed("You cannot kick yourself!"))
             return
 
-        team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if not team or team['owner_id'] != interaction.user.id:
             await interaction.followup.send(embed=self.bot.error_embed("You do not own a team!"))
             return
@@ -212,7 +212,7 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed("Member not found!"))
             return
 
-        member_team = await self.bot.database.fetch_team_by_member(member)
+        member_team = await self.bot.database.fetch_team_by_member_id(member)
         if not member_team or member_team['id'] != team['id']:
             await interaction.followup.send(embed=self.bot.error_embed(f"`{guild_member.display_name}` is not in your team!"))
             return
@@ -226,7 +226,7 @@ class Team(commands.GroupCog, group_name='team'):
     async def leave(self, interaction: discord.Interaction):
         """Leave the current team."""
         await interaction.response.defer(thinking=True)
-        existing_team = await self.bot.database.fetch_team_by_member(interaction.user.id)
+        existing_team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if not existing_team:
             await interaction.followup.send(embed=self.bot.error_embed("You are not in a team!"))
             return
@@ -272,7 +272,7 @@ class Team(commands.GroupCog, group_name='team'):
         """View the current team details."""
         await interaction.response.defer(thinking=True)
         if team is None:
-            team_record = await self.bot.database.fetch_team_by_member(interaction.user.id)
+            team_record = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
             if not team_record:
                 await interaction.followup.send(embed=self.bot.error_embed("Please specify a team!"))
                 return
