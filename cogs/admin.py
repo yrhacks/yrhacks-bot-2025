@@ -45,7 +45,7 @@ class Admin(commands.GroupCog, group_name='admin'):
             description=f"{member} has been verified."
         )
         await interaction.followup.send(embed=embed)
-        await self.bot.log_message(f"{interaction.user} verified {member}.")
+        await self.bot.log_message(f"{interaction.user.mention} verified {member.mention}.")
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Admin(bot), guilds=[discord.Object(bot.config.bot.guild_id)])
