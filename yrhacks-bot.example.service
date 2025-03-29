@@ -1,0 +1,17 @@
+[Unit]
+Description=YRHacks Bot
+After=network-online.target
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=/home/yrhacks-bot-2025 
+ExecStart=/home/yrhacks-bot-2025/venv/bin/python3.11 /home/yrhacks-bot-2025/main.py
+User=user
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
