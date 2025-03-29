@@ -35,7 +35,7 @@ class Profile(commands.GroupCog, group_name='profile'):
             description=f"Your profile description has been updated to: {description}"
         )
         await interaction.followup.send(embed=embed)
-        await self.bot.log_message(f"{interaction.user} updated their profile description to: {description}")
+        await self.bot.log_message(f"{interaction.user.mention} updated their profile description to: {description}")
 
     @app_commands.command(name='view')
     async def view(self, interaction: discord.Interaction, member: discord.Member | None = None):
