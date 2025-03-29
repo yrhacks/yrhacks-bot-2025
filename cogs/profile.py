@@ -22,6 +22,13 @@ class Profile(commands.GroupCog, group_name='profile'):
     async def set(self, interaction: discord.Interaction, description: str):
         """Set or view your profile description."""
         await interaction.response.defer(thinking=True)
+        if len(description) > 150:
+            await interaction.followup.send(embed=self.bot.error_embed(
+                title="Description Too Long",
+                description="Your profile description cannot exceed 150 characters."
+            ))
+            return
+
         await self.bot.database.update_user_about(interaction.user, description)
         embed = self.bot.info_embed(
             title="Profile Updated",
@@ -44,8 +51,6 @@ class Profile(commands.GroupCog, group_name='profile'):
             await interaction.response.send_message(embed=embed)
             return
 
-        about = await self.bot.database.fetch_user_about(member)
-
         user_data = self.bot.registrant_discord_mapping.get(str(member))
         if user_data is None:
             embed = self.bot.error_embed(
@@ -55,15 +60,24 @@ class Profile(commands.GroupCog, group_name='profile'):
             await interaction.response.send_message(embed=embed)
             return
 
+        about = await self.bot.database.fetch_user_about(member)
+        team = await self.bot.database.fetch_team_by_member_id(member.id)
+        if team:
+            team_name = team['name']
+        else:
+            team_name = "No team set"
+
         embed = discord.Embed(
             title=f"{member}'s Profile",
-            description=about or "No description set.",
-            color=self.bot.config.bot.embed_info_color
+            description=f'{member.mention}\n\n',
+            color=self.bot.config.embeds.info_color
         )
-        embed.add_field(name="Full Name", value=user_data.get("full_name", "Not set"), inline=False)
-        embed.add_field(name="School", value=user_data.get("school", "Not set"), inline=False)
-        embed.add_field(name="Grade", value=user_data.get("grade", "Not set"), inline=False)
-        embed.add_field(name="SHSM Sector", value=user_data.get("shsm_sector", "Not set"), inline=False)
+        embed.add_field(name="About", value=about or "No description set.", inline=False)
+        embed.add_field(name="Full Name", value=user_data["full_name"], inline=True)
+        embed.add_field(name="Grade", value=user_data["grade"], inline=True)
+        embed.add_field(name="School", value=user_data["school"], inline=True)
+        embed.add_field(name="Team", value=team_name, inline=True)
+        embed.add_field(name="SHSM Sector", value=user_data["shsm_sector"], inline=True)
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot: Bot) -> None:
