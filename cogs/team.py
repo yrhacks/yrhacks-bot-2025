@@ -52,7 +52,7 @@ class Team(commands.GroupCog, group_name='team'):
     @app_commands.check(check_user_is_registrant)
     @app_commands.autocomplete(member=team_member_autocomplete)
     async def remove(self, interaction: discord.Interaction, member: int):
-        """Remove a member from the team."""
+        """Remove a member from your team."""
         await interaction.response.defer(thinking=True)
         guild_member = interaction.guild.get_member(member)  # type: ignore
         if guild_member is None:
@@ -81,16 +81,19 @@ class Team(commands.GroupCog, group_name='team'):
     async def accept(self, interaction: discord.Interaction, team: int):
         """Accept a team invitation."""
         await interaction.response.defer(thinking=True)
-        # validate team
+
         team_record = await self.bot.database.fetch_team_by_id(team)
         if not team_record:
             await interaction.followup.send(embed=self.bot.error_embed("Team not found!"))
             return
 
-        # check if user is already in a team
         existing_team = await self.bot.database.fetch_team_by_member_id(interaction.user.id)
         if existing_team:
             await interaction.followup.send(embed=self.bot.error_embed("You must leave your existing team before accepting a new one!"))
+            return
+
+        if team_record['member_count'] >= 4:
+            await interaction.followup.send(embed=self.bot.error_embed("This team is already full!"))
             return
 
         await self.bot.database.accept_team_invite(interaction.user, team)
@@ -154,7 +157,7 @@ class Team(commands.GroupCog, group_name='team'):
 
     @app_commands.command(name='invite')
     async def invite(self, interaction: discord.Interaction, member: discord.Member):
-        """Invite a member to the team."""
+        """Invite a member to your team."""
         await interaction.response.defer(thinking=True)
 
         inviter = interaction.user
@@ -196,7 +199,7 @@ class Team(commands.GroupCog, group_name='team'):
     @app_commands.command(name='kick')
     @app_commands.autocomplete(member=team_member_autocomplete)
     async def kick(self, interaction: discord.Interaction, member: int):
-        """Kick a member from the team."""
+        """Kick a member from your team."""
         await interaction.response.defer(thinking=True)
         if member == interaction.user.id:
             await interaction.followup.send(embed=self.bot.error_embed("You cannot kick yourself!"))
@@ -243,7 +246,7 @@ class Team(commands.GroupCog, group_name='team'):
 
     @app_commands.command(name='rename')
     async def rename(self, interaction: discord.Interaction, new_name: str):
-        """Rename the team."""
+        """Rename your team."""
         if len(new_name) > 20:
             await interaction.response.send_message(embed=self.bot.error_embed("Team name must be less than 20 characters."))
             return

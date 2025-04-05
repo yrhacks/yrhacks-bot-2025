@@ -25,7 +25,7 @@ class Database:
                 'grade': registration['grade'],
             }).execute()
         except PostgrestAPIError as e:
-            if "duplicate key value violates unique constraint" in str(e):
+            if 'duplicate key value violates unique constraint' in str(e):
                 # Do nothing if the discord_id already exists
                 pass
             else:
@@ -61,7 +61,7 @@ class Database:
     # # TODO: Experiment with the ttl. The goal is so that the teams aren't repeatedly fetched while one user is *using the same slash command*.
     # @alru_cache(maxsize=32, ttl=7)
     async def fetch_teams(self, user: UserType) -> list[TeamRecordWithCounts]:
-        response = await self.supabase.rpc("fetch_teams_with_counts").execute()
+        response = await self.supabase.rpc('fetch_teams_with_counts').execute()
         return response.data if response.data else []
 
     async def fetch_team_by_member_id(self, team_member_id: int) -> TeamRecord | None:
@@ -69,15 +69,16 @@ class Database:
         team_id = response.data[0]['team_id']
         if team_id is None:
             return None
-        team_response = await self.supabase.table('teams').select('*').eq('id', team_id).execute()
-        return team_response.data[0]
 
-    async def fetch_team_by_id(self, team_id: int) -> TeamRecord:
-        response = await self.supabase.table('teams').select('*').eq('id', team_id).execute()
-        return response.data[0]
+        team_response = await self.supabase.table('teams').select('*').eq('id', team_id).execute()
+        return team_response.data[0] if team_response.data else None
+
+    async def fetch_team_by_id(self, team_id: int) -> TeamRecordWithCounts | None:
+        response = await self.supabase.rpc('fetch_team_with_count', {'team_id': team_id}).execute()
+        return response.data[0] if response.data else None
 
     async def fetch_team_invites_for_member(self, member: UserType) -> list[TeamRecord]:
-        response = await self.supabase.rpc("fetch_pending_invites", {"member_id": member.id}).execute()
+        response = await self.supabase.rpc('fetch_pending_invites', {'member_id': member.id}).execute()
         return response.data if response.data else []
 
     async def rename_team(self, owner_id, new_name: str) -> list[TeamRecord]:
@@ -85,9 +86,9 @@ class Database:
         return response.data
 
     async def invite_to_team(self, inviter: UserType, member: UserType) -> bool:
-        await self.supabase.rpc("invite_user_to_team", {
-            "inviter_id": inviter.id,
-            "invitee_id": member.id
+        await self.supabase.rpc('invite_user_to_team', {
+            'inviter_id': inviter.id,
+            'invitee_id': member.id
         }).execute()
         return True
 

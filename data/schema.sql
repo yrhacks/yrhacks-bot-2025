@@ -63,6 +63,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION fetch_team_with_count(team_id INTEGER)
+RETURNS TABLE (
+    id INTEGER, 
+    name TEXT, 
+    owner_id BIGINT, 
+    created_at TIMESTAMP, 
+    updated_at TIMESTAMP, 
+    member_count INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY 
+    SELECT t.id, t.name, t.owner_id, t.created_at, t.updated_at, COUNT(u.id)::INTEGER AS member_count
+    FROM teams t
+    LEFT JOIN users u ON t.id = u.team_id
+    WHERE t.id = team_id
+    GROUP BY t.id;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION fetch_pending_invites(member_id BIGINT)
 RETURNS TABLE (
     id INTEGER, 
