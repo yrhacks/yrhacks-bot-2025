@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import discord
 import json
 import logging
@@ -105,6 +106,7 @@ class Bot(commands.Bot):
             await member.add_roles(role)
             await self.database.create_user_if_not_exists(self.registrant_discord_mapping[str(member)], member)
         else:
+            asyncio.create_task(self.log_message(f"User {member.mention} joined the server but is not a registrant."))
             # TODO: Set this in the config
             role = member.guild.get_role(self.config.bot.unverified_role_id)
             if role is None:
@@ -117,6 +119,7 @@ class Bot(commands.Bot):
                     f"We couldn't verify your Discord username with any registration records. To gain access to the server, please email us at **yrhacks@gapps.yrdsb.ca** with your full name and Discord username (`{member}`)."
                 ))
             except discord.Forbidden:
+                asyncio.create_task(self.log_message(f"User {member.mention} has DMs disabled. Unable to send welcome/unverified message."))
                 ...
                 # TODO: What should happen in this case?
                 # unverified_channel: discord.TextChannel | None = member.guild.get_channel(self.bot.config.bot.unverified_channel_id)  # type: ignore
