@@ -8,15 +8,20 @@ if TYPE_CHECKING:
     from main import Bot
 
 class TeamInviteView(discord.ui.View):
-    def __init__(self, bot: Bot, team_name: str, inviter: discord.Member | discord.User, team_id: int) -> None:
+    def __init__(self, bot: Bot, team_name: str, inviter: discord.Member | discord.User, invitee: discord.Member | discord.User, team_id: int) -> None:
         super().__init__(timeout=None)
         self.bot = bot
         self.team_name = team_name
         self.inviter = inviter
+        self.invitee = invitee
         self.team_id = team_id
         self.finished = False
 
-    # NOTE: No interaction check is needed because this should only be used in DMs
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.invitee.id:
+            await interaction.response.send_message("You cannot interact with this button.", ephemeral=True)
+            return False
+        return True
 
     async def submit(self, interaction: discord.Interaction, accepted: bool) -> None:
         await interaction.response.defer(thinking=True)

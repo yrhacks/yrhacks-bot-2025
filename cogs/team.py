@@ -179,22 +179,23 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed(f"{member.display_name} is already in a team!"))
             return
 
+        # TODO: Show team members?
+        view = TeamInviteView(self.bot, team_data['name'], inviter, member, team_data['id'])
+
+        embed = self.bot.info_embed("🤝 Team Invitation")
+        embed.add_field(name="Team", value=team_data['name'], inline=False)
+        embed.add_field(name="Invited By", value=inviter.mention, inline=False)
+        embed.set_footer(text="Click a button below to accept or decline.")
+
         try:
-            # TODO: Show team members?
-            view = TeamInviteView(self.bot, team_data['name'], inviter, team_data['id'])
-
-            embed = self.bot.info_embed("🤝 Team Invitation")
-            embed.add_field(name="Team", value=team_data['name'], inline=False)
-            embed.add_field(name="Invited By", value=inviter.mention, inline=False)
-            embed.set_footer(text="Click a button below to accept or decline.")
-
             await member.send(embed=embed, view=view)
             await interaction.followup.send(embed=self.bot.success_embed(f"Sent a team invite to {member.display_name}!"))
-            await view.wait()
         except discord.Forbidden:
-            await interaction.followup.send(embed=self.bot.error_embed(f"Unable to message {member.mention}."))
+            await interaction.followup.send(member.mention, embed=embed, view=view)
+                # await interaction.followup.send(embed=self.bot.error_embed(f"Unable to message {member.display_avatar}."))
 
         await self.bot.log_message(f"{inviter.mention} invited {member.mention} to join `{discord.utils.escape_markdown(team_data['name'])}`.")
+        await view.wait()
 
     @app_commands.command(name='kick')
     @app_commands.autocomplete(member=team_member_autocomplete)
