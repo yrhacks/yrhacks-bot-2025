@@ -78,7 +78,7 @@ class Database:
         return team_response.data[0] if team_response.data else None
 
     async def fetch_team_by_id(self, team_id: int) -> TeamRecordWithCounts | None:
-        response = await self.supabase.rpc('fetch_team_with_count', {'team_id': team_id}).execute()
+        response = await self.supabase.rpc('fetch_team_with_count', {'p_team_id': team_id}).execute()
         return response.data[0] if response.data else None
 
     async def fetch_team_invites_for_member(self, member: UserType) -> list[TeamRecord]:

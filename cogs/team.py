@@ -22,14 +22,14 @@ class Team(commands.GroupCog, group_name='team'):
     async def team_autocomplete(self, interaction: discord.Interaction, current: str):
         teams = await self.bot.database.fetch_teams(interaction.user)
         return [
-            app_commands.Choice(name=team['name'], value=team['id'])
+            app_commands.Choice(name=team['name'][:22] + '...' if len(team['name']) > 25 else team['name'], value=team['id'])
             for team in teams if current.lower() in team['name'].lower()
         ]
 
     async def team_invite_autocomplete(self, interaction: discord.Interaction, current: str):
         teams = await self.bot.database.fetch_team_invites_for_member(interaction.user)
         return [
-            app_commands.Choice(name=team['name'], value=team['id'])
+            app_commands.Choice(name=team['name'][:22] + '...' if len(team['name']) > 25 else team['name'], value=team['id'])
             for team in teams if current.lower() in team['name'].lower()
         ]
 
@@ -44,7 +44,7 @@ class Team(commands.GroupCog, group_name='team'):
 
         members = await self.bot.database.fetch_team_members(team['id'])
         return [
-            app_commands.Choice(name=guild_member.display_name, value=member.id)  # type: ignore
+            app_commands.Choice(name=guild_member.display_name[:22] + '...' if len(guild_member.display_name) > 25 else guild_member.display_name, value=member.id)  # type: ignore
             for member in members if current.lower() in (guild_member := guild.get_member(member.id)).display_name.lower()  # type: ignore
         ]
 
