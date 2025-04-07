@@ -31,15 +31,26 @@ class Admin(commands.GroupCog, group_name='admin'):
             'shsm_sector': shsm_sector,
         }, member)
         # TODO: Improve
-        role = interaction.guild and interaction.guild.get_role(self.bot.config.bot.hacker_role_id)
-        if role is None:
+        hacker_role = interaction.guild and interaction.guild.get_role(self.bot.config.bot.hacker_role_id)
+        if hacker_role is None:
             embed = self.bot.error_embed(
                 title="Role Not Found",
-                description="The 'Hacker' role does not exist."
+                description="The 'Hacker' role could not be found."
             )
             await interaction.followup.send(embed=embed)
             return
-        await member.add_roles(role, reason="User verified by admin.")
+        await member.add_roles(hacker_role)
+        unverified_role = interaction.guild and interaction.guild.get_role(self.bot.config.bot.unverified_role_id)
+        if unverified_role is None:
+            embed = self.bot.error_embed(
+                title="Role Not Found",
+                description="The 'Unverified' role could not be found."
+            )
+            await interaction.followup.send(embed=embed)
+            return
+
+        await member.remove_roles(unverified_role)
+        await member.edit(nick=full_name)
         embed = self.bot.success_embed(
             title="User Verified",
             description=f"{member} has been verified."
