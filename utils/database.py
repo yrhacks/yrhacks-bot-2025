@@ -68,7 +68,9 @@ class Database:
 
     async def fetch_team_by_member_id(self, team_member_id: int) -> TeamRecord | None:
         response = await self.supabase.table('users').select('team_id').eq('discord_id', team_member_id).execute()
-        team_id = response.data and response.data[0]['team_id']
+        if not response.data:
+            return None
+        team_id = response.data[0]['team_id']
         if team_id is None:
             return None
 

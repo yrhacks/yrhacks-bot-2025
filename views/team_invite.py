@@ -47,7 +47,7 @@ class TeamInviteView(discord.ui.View):
             child.disabled = True
 
         self.stop()
-        await interaction.response.edit_message(view=self)
+        # await interaction.followup.edit_message(message.id, view=self)
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.success)
     async def accept(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
