@@ -50,7 +50,7 @@ class Bot(commands.Bot):
             registrations: list[Registration] = json.load(file)
             for registration in registrations:
                 if registration['discord_username']:
-                    self.registrant_discord_mapping[registration['discord_username'].lower()] = registration
+                    self.registrant_discord_mapping[registration['discord_username'].lower().strip()] = registration
 
     async def setup_hook(self) -> None:
         for extension in self.INITIAL_EXTENSIONS:
