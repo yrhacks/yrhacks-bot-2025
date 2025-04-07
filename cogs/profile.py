@@ -51,7 +51,7 @@ class Profile(commands.GroupCog, group_name='profile'):
             await interaction.response.send_message(embed=embed)
             return
 
-        user_data = self.bot.registrant_discord_mapping.get(str(member))
+        user_data = self.bot.registrant_discord_mapping.get(str(member).lower())
         if user_data is None:
             embed = self.bot.error_embed(
                 title="Profile Not Found",

@@ -50,7 +50,7 @@ class Bot(commands.Bot):
             registrations: list[Registration] = json.load(file)
             for registration in registrations:
                 if registration['discord_username']:
-                    self.registrant_discord_mapping[registration['discord_username']] = registration
+                    self.registrant_discord_mapping[registration['discord_username'].lower()] = registration
 
     async def setup_hook(self) -> None:
         for extension in self.INITIAL_EXTENSIONS:
@@ -90,7 +90,7 @@ class Bot(commands.Bot):
         await channel.send(embed=embed)
 
     def check_user_is_registrant(self, member: discord.Member | discord.User) -> bool:
-        return str(member) in self.registrant_discord_mapping
+        return str(member).lower() in self.registrant_discord_mapping
 
     async def on_member_join(self, member: discord.Member) -> None:
         if member.guild.id != self.config.bot.guild_id:
@@ -104,7 +104,7 @@ class Bot(commands.Bot):
                 return
 
             await member.add_roles(role)
-            await self.database.create_user_if_not_exists(self.registrant_discord_mapping[str(member)], member)
+            await self.database.create_user_if_not_exists(self.registrant_discord_mapping[str(member).lower()], member)
         else:
             asyncio.create_task(self.log_message(f"User {member.mention} joined the server but is not a registrant."))
             # TODO: Set this in the config
