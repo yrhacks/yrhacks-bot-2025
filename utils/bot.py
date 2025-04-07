@@ -98,7 +98,7 @@ class Bot(commands.Bot):
             return
 
         if self.check_user_is_registrant(member):
-            role = member.guild.get_role(self.config.bot.unverified_role_id)
+            role = member.guild.get_role(self.config.bot.hacker_role_id)
             if role is None:
                 logger.warning(f"Hacker role not found.")
                 return
