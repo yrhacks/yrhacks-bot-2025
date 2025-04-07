@@ -5,11 +5,13 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     discord_id BIGINT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
     school TEXT NOT NULL,
     grade TEXT NOT NULL,
+    shsm_sector TEXT DEFAULT 'None',
     about TEXT,
     created_at TIMESTAMP DEFAULT now(),
-    updated_at TIMESTAMP DEFAULT now()
+    updated_at TIMESTAMP DEFAULT now(),
 );
 
 CREATE TABLE teams (

@@ -9,7 +9,7 @@ import discord
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from utils.models import Registration, TeamRecord, TeamRecordWithCounts
+    from utils.models import Registration, TeamRecord, TeamRecordWithCounts, UserRecord
 
     UserType = discord.Member | discord.User
 
@@ -23,6 +23,8 @@ class Database:
                 'discord_id': member.id,
                 'school': registration['school'],
                 'grade': registration['grade'],
+                'shsm_sector': registration['shsm_sector'],
+                'full_name': registration['full_name'],
             }).execute()
         except PostgrestAPIError as e:
             if 'duplicate key value violates unique constraint' in str(e):
@@ -31,11 +33,11 @@ class Database:
             else:
                 raise
 
-    async def fetch_user_about(self, member: UserType) -> str | None:
-        response = await self.supabase.table('users').select('about').eq('discord_id', member.id).execute()
+    async def fetch_user(self, member: UserType) -> UserRecord | None:
+        response = await self.supabase.table('users').select('*').eq('discord_id', member.id).execute()
         if not response.data:
             return None
-        return response.data[0]['about']
+        return response.data[0]
 
     async def update_user_about(self, member: UserType, about: str) -> None:
         await self.supabase.table('users').update({'about': about}).eq('discord_id', member.id).execute()

@@ -89,30 +89,46 @@ class Bot(commands.Bot):
         embed = self.info_embed("", message)
         await channel.send(embed=embed)
 
-    def check_user_is_registrant(self, member: discord.Member | discord.User) -> bool:
-        return str(member).lower() in self.registrant_discord_mapping
+    async def get_or_fetch_user_registration(self, member: discord.Member | discord.User) -> Registration | None:
+        registration = self.registrant_discord_mapping.get(str(member).lower())
+        if registration:
+            return registration
+
+        # if the user was verified manually
+        user = await self.database.fetch_user(member)
+        if user:
+            return {
+                'discord_username': str(member),
+                'school': user['school'],
+                'grade': user['grade'],
+                'full_name': user['full_name'],
+                'shsm_sector': user['shsm_sector'],
+            }
+        return None
 
     async def on_member_join(self, member: discord.Member) -> None:
         if member.guild.id != self.config.bot.guild_id:
             logger.warning(f"Member {member} joined a different server (ID: {member.guild.id}). Ignoring.")
             return
 
-        if self.check_user_is_registrant(member):
+        if self.get_or_fetch_user_registration(member) is not None:
             role = member.guild.get_role(self.config.bot.hacker_role_id)
             if role is None:
                 logger.warning(f"Hacker role not found.")
                 return
 
             await member.add_roles(role)
+            await member.edit(nick=member.display_name)
             await self.database.create_user_if_not_exists(self.registrant_discord_mapping[str(member).lower()], member)
         else:
             asyncio.create_task(self.log_message(f"User {member.mention} joined the server but is not a registrant."))
-            # TODO: Set this in the config
+
             role = member.guild.get_role(self.config.bot.unverified_role_id)
             if role is None:
                 logger.warning(f"Unverified role not found.")
                 return
             await member.add_roles(role)
+
             try:
                 await member.send(embed=self.info_embed(
                     f"🎉 Welcome to YRHacks 2025, {member.mention}! 🎉",
@@ -120,11 +136,3 @@ class Bot(commands.Bot):
                 ))
             except discord.Forbidden:
                 asyncio.create_task(self.log_message(f"User {member.mention} has DMs disabled. Unable to send welcome/unverified message."))
-                ...
-                # TODO: What should happen in this case?
-                # unverified_channel: discord.TextChannel | None = member.guild.get_channel(self.bot.config.bot.unverified_channel_id)  # type: ignore
-                # if unverified_channel is None:
-                #     logger.warning(f"Unverified channel not found. User {member} cannot be notified.")
-                #     return
-
-                # await unverified_channel.send(f"Welcome {member.mention}! We were unable to verify your registration. Please use the `/user register` command to register.")

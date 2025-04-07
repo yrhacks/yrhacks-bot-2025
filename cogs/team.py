@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 from views.team_invite import TeamInviteView
 
-def check_user_is_registrant(interaction: discord.Interaction[Bot]) -> bool:
-    return interaction.client.check_user_is_registrant(interaction.user)
+async def check_user_is_registrant(interaction: discord.Interaction[Bot]) -> bool:
+    return await interaction.client.get_or_fetch_user_registration(interaction.user) is not None
 
 @app_commands.guild_only()
 class Team(commands.GroupCog, group_name='team'):
@@ -72,7 +72,7 @@ class Team(commands.GroupCog, group_name='team'):
         if guild_member not in members:
             await interaction.followup.send(embed=self.bot.error_embed(f"`{guild_member.display_name}` is not in your team!"))
 
-        if not self.bot.check_user_is_registrant(guild_member):
+        if not await self.bot.get_or_fetch_user_registration(guild_member):
             await interaction.followup.send(embed=self.bot.error_embed(f"`{guild_member.display_name}` is not registered."))
         await interaction.followup.send(embed=self.bot.success_embed(f"Removed `{guild_member.display_name}` from the team!"))
 
@@ -170,7 +170,7 @@ class Team(commands.GroupCog, group_name='team'):
             await interaction.followup.send(embed=self.bot.error_embed("You cannot invite yourself!"))
             return
 
-        if not self.bot.check_user_is_registrant(member):
+        if not self.bot.get_or_fetch_user_registration(member):
             await interaction.followup.send(embed=self.bot.error_embed(f"{member.display_name} is not registered."))
             return
 

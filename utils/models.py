@@ -18,3 +18,15 @@ class TeamRecord(TypedDict):
 
 class TeamRecordWithCounts(TeamRecord):
     member_count: int
+
+class UserRecord(TypedDict):
+    id: int
+    discord_id: int
+    full_name: str
+    school: str
+    grade: str
+    about: str | None
+    shsm_sector: str
+    team_id: int | None
+    created_at: str
+    updated_at: str

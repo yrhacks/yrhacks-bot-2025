@@ -43,24 +43,27 @@ class Profile(commands.GroupCog, group_name='profile'):
         if member is None:
             member = cast(discord.Member, interaction.user)
 
-        if not self.bot.check_user_is_registrant(member):
+        await interaction.response.defer(thinking=True)
+
+        registration = await self.bot.get_or_fetch_user_registration(member)
+        if registration is None:
             embed = self.bot.error_embed(
                 title="Profile Not Found",
                 description=f"{member} is not registered."
             )
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
             return
 
-        user_data = self.bot.registrant_discord_mapping.get(str(member).lower())
+        user_data = await self.bot.database.fetch_user(member)
         if user_data is None:
             embed = self.bot.error_embed(
                 title="Profile Not Found",
-                description=f"No data found for {member}."
+                description=f"{member} is not registered."
             )
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
             return
 
-        about = await self.bot.database.fetch_user_about(member)
+        about = user_data["about"] if user_data else None
         team = await self.bot.database.fetch_team_by_member_id(member.id)
         if team:
             team_name = team['name']
@@ -78,7 +81,7 @@ class Profile(commands.GroupCog, group_name='profile'):
         embed.add_field(name="School", value=user_data["school"], inline=True)
         embed.add_field(name="Team", value=team_name, inline=True)
         embed.add_field(name="SHSM Sector", value=user_data["shsm_sector"], inline=True)
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Profile(bot), guilds=[discord.Object(bot.config.bot.guild_id)])
