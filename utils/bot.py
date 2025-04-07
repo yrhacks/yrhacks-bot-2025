@@ -111,15 +111,17 @@ class Bot(commands.Bot):
             logger.warning(f"Member {member} joined a different server (ID: {member.guild.id}). Ignoring.")
             return
 
-        if self.get_or_fetch_user_registration(member) is not None:
+        registration = await self.get_or_fetch_user_registration(member)
+        if registration is not None:
             role = member.guild.get_role(self.config.bot.hacker_role_id)
             if role is None:
                 logger.warning(f"Hacker role not found.")
                 return
 
             await member.add_roles(role)
-            await member.edit(nick=member.display_name)
-            await self.database.create_user_if_not_exists(self.registrant_discord_mapping[str(member).lower()], member)
+
+            await member.edit(nick=registration['full_name'])
+            await self.database.create_user_if_not_exists(registration, member)
         else:
             asyncio.create_task(self.log_message(f"User {member.mention} joined the server but is not a registrant."))
 
